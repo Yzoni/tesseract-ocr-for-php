@@ -55,6 +55,20 @@ class TesseractOCR
     private $psm;
 
     /**
+     * The name of the export filename base
+     *
+     * @var string
+     */
+    private $exportFileBaseName;
+
+    /**
+     * Export file type
+     *
+     * @var string
+     */
+    private $exportType;
+
+    /**
      *  List of tesseract configuration variables.
      *
      * @var array
@@ -169,6 +183,18 @@ class TesseractOCR
     }
 
     /**
+     * Sets the export file base and file type
+     *
+     * @param string $filePath
+     * @param string $type
+     */
+    public function exportFileParam($filePath, $type)
+    {
+        $this->exportFileBaseName = $filePath;
+        $this->exportType = $type;
+    }
+
+    /**
      * Shortcut to set tessedit_char_whitelist values in a more convenient way.
      * Example:
      *
@@ -197,12 +223,13 @@ class TesseractOCR
     protected function buildCommand()
     {
         return $this->executable.' '.escapeshellarg($this->image).' stdout'
-            .$this->buildTessdataDirParam()
-            .$this->buildUserWordsParam()
-            .$this->buildUserPatternsParam()
-            .$this->buildLanguagesParam()
-            .$this->buildPsmParam()
-            .$this->buildConfigurationsParam();
+        .$this->buildTessdataDirParam()
+        .$this->buildUserWordsParam()
+        .$this->buildUserPatternsParam()
+        .$this->buildLanguagesParam()
+        .$this->buildPsmParam()
+        .$this->buildConfigurationsParam()
+        .$this->buildExportFileParam();
     }
 
     /**
@@ -275,5 +302,15 @@ class TesseractOCR
             array_keys($this->configs),
             array_values($this->configs)
         ));
+    }
+
+    /**
+     * Return export path and type
+     *
+     * @return string
+     */
+    private function buildExportFileParam()
+    {
+        return $this->exportFileBaseName . ' ' . $this->exportType;
     }
 }
