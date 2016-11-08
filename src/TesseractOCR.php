@@ -1,4 +1,5 @@
 <?php
+
 /**
  * A wrapper to work with TesseractOCR inside PHP.
  */
@@ -98,6 +99,106 @@ class TesseractOCR
     }
 
     /**
+     * Builds the tesseract command with all its options.
+     * This method is 'protected' instead of 'private' to make testing easier.
+     *
+     * @return string
+     */
+    protected function buildCommand()
+    {
+        return $this->executable . ' ' . escapeshellarg($this->image)
+        . $this->buildTessdataDirParam()
+        . $this->buildUserWordsParam()
+        . $this->buildUserPatternsParam()
+        . $this->buildLanguagesParam()
+        . $this->buildPsmParam()
+        . $this->buildConfigurationsParam()
+        . $this->buildExportFileParam();
+    }
+
+    /**
+     * If tessdata directory is defined, return the correspondent command line
+     * argument to the tesseract command.
+     *
+     * @return string
+     */
+    private function buildTessdataDirParam()
+    {
+        return $this->tessdataDir ? " --tessdata-dir $this->tessdataDir" : '';
+    }
+
+    /**
+     * If user words file is defined, return the correspondent command line
+     * argument to the tesseract command.
+     *
+     * @return string
+     */
+    private function buildUserWordsParam()
+    {
+        return $this->userWords ? " --user-words $this->userWords" : '';
+    }
+
+    /**
+     * If user patterns file is defined, return the correspondent command line
+     * argument to the tesseract command.
+     *
+     * @return string
+     */
+    private function buildUserPatternsParam()
+    {
+        return $this->userPatterns ? " --user-patterns $this->userPatterns" : '';
+    }
+
+    /**
+     * If one (or more) languages are defined, return the correspondent command
+     * line argument to the tesseract command.
+     *
+     * @return string
+     */
+    private function buildLanguagesParam()
+    {
+        return $this->languages ? ' -l ' . join('+', $this->languages) : '';
+    }
+
+    /**
+     * If a page segmentation mode is defined, return the correspondent command
+     * line argument to the tesseract command.
+     *
+     * @return string
+     */
+    private function buildPsmParam()
+    {
+        return is_null($this->psm) ? '' : ' -psm ' . $this->psm;
+    }
+
+    /**
+     * Return tesseract command line arguments for every custom configuration.
+     *
+     * @return string
+     */
+    private function buildConfigurationsParam()
+    {
+        $buildParam = function ($config, $value) {
+            return ' -c ' . escapeshellarg("$config=$value");
+        };
+        return join('', array_map(
+            $buildParam,
+            array_keys($this->configs),
+            array_values($this->configs)
+        ));
+    }
+
+    /**
+     * Return export path and type
+     *
+     * @return string
+     */
+    private function buildExportFileParam()
+    {
+        return ' \'' . $this->exportFileBaseName . '\' ' . $this->exportType;
+    }
+
+    /**
      * Sets a custom location for the tesseract executable.
      *
      * @param string $executable
@@ -170,19 +271,6 @@ class TesseractOCR
     }
 
     /**
-     * Sets a tesseract configuration value.
-     *
-     * @param string $key
-     * @param string $value
-     * @return TesseractOCR
-     */
-    public function config($key, $value)
-    {
-        $this->configs[$key] = $value;
-        return $this;
-    }
-
-    /**
      * Sets the export file base and file type
      *
      * @param string $filePath
@@ -215,102 +303,15 @@ class TesseractOCR
     }
 
     /**
-     * Builds the tesseract command with all its options.
-     * This method is 'protected' instead of 'private' to make testing easier.
+     * Sets a tesseract configuration value.
      *
-     * @return string
+     * @param string $key
+     * @param string $value
+     * @return TesseractOCR
      */
-    protected function buildCommand()
+    public function config($key, $value)
     {
-        return $this->executable.' '.escapeshellarg($this->image).' stdout'
-        .$this->buildTessdataDirParam()
-        .$this->buildUserWordsParam()
-        .$this->buildUserPatternsParam()
-        .$this->buildLanguagesParam()
-        .$this->buildPsmParam()
-        .$this->buildConfigurationsParam()
-        .$this->buildExportFileParam();
-    }
-
-    /**
-     * If tessdata directory is defined, return the correspondent command line
-     * argument to the tesseract command.
-     *
-     * @return string
-     */
-    private function buildTessdataDirParam()
-    {
-        return $this->tessdataDir ? " --tessdata-dir $this->tessdataDir" : '';
-    }
-
-    /**
-     * If user words file is defined, return the correspondent command line
-     * argument to the tesseract command.
-     *
-     * @return string
-     */
-    private function buildUserWordsParam()
-    {
-        return $this->userWords ? " --user-words $this->userWords" : '';
-    }
-
-    /**
-     * If user patterns file is defined, return the correspondent command line
-     * argument to the tesseract command.
-     *
-     * @return string
-     */
-    private function buildUserPatternsParam()
-    {
-        return $this->userPatterns ? " --user-patterns $this->userPatterns" : '';
-    }
-
-    /**
-     * If one (or more) languages are defined, return the correspondent command
-     * line argument to the tesseract command.
-     *
-     * @return string
-     */
-    private function buildLanguagesParam()
-    {
-        return $this->languages ? ' -l '.join('+', $this->languages) : '';
-    }
-
-    /**
-     * If a page segmentation mode is defined, return the correspondent command
-     * line argument to the tesseract command.
-     *
-     * @return string
-     */
-    private function buildPsmParam()
-    {
-        return is_null($this->psm) ? '' : ' -psm '.$this->psm;
-    }
-
-    /**
-     * Return tesseract command line arguments for every custom configuration.
-     *
-     * @return string
-     */
-    private function buildConfigurationsParam()
-    {
-        $buildParam = function ($config, $value) {
-            return ' -c '.escapeshellarg("$config=$value");
-        };
-        return join('', array_map(
-            $buildParam,
-            array_keys($this->configs),
-            array_values($this->configs)
-        ));
-    }
-
-    /**
-     * Return export path and type
-     *
-     * @return string
-     */
-    private function buildExportFileParam()
-    {
-        return $this->exportFileBaseName . ' ' . $this->exportType;
+        $this->configs[$key] = $value;
+        return $this;
     }
 }
