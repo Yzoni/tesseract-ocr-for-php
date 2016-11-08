@@ -91,11 +91,13 @@ class TesseractOCR
     /**
      * Executes tesseract command and returns the generated output.
      *
+     * @param $output array array containing stdout
+     * @param $return int the return status of the command
      * @return string
      */
-    public function run()
+    public function run($output, $return)
     {
-        return trim(`{$this->buildCommand()}`);
+        return exec(trim($this->buildCommand()), $output, $return);
     }
 
     /**
